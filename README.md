@@ -45,4 +45,6 @@ only needs the instructions from the selected laboratory's README.
   content are written in English.
 
 The laboratory catalog is stored in [`catalog.yaml`](catalog.yaml).
+The prioritized learning plan is available in
+[`docs/roadmap.md`](docs/roadmap.md).
 
