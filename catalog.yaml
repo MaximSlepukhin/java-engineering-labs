@@ -1,0 +1,26 @@
+schema_version: 1
+
+labs:
+  - id: JV-CON-001
+    slug: race-condition
+    title: Race Condition
+    path: labs/java/concurrency/JV-CON-001-race-condition
+    type: java-only
+    difficulty: basic
+    status: runnable
+    java: 21
+    tags:
+      - java
+      - concurrency
+      - race-condition
+      - synchronization
+    requirements:
+      - docker-compose
+    estimated_time: 5m
+    estimated_memory: 512mb
+    created_at: 2026-11-20
+    latest_version: null
+    publications: []
+    related: []
+    scenarios: []
+

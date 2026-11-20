@@ -1,0 +1,30 @@
+name: Validate laboratories
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  jv-con-001:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: labs/java/concurrency/JV-CON-001-race-condition
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Verify with Maven
+        run: ./mvnw --batch-mode verify
+      - name: Validate Docker Compose
+        run: docker compose config --quiet
+      - name: Run laboratory
+        run: docker compose up --build --abort-on-container-exit --exit-code-from demo
+      - name: Cleanup
+        if: always()
+        run: docker compose down --volumes --remove-orphans

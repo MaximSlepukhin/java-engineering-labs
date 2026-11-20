@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CATALOG="$ROOT/catalog.yaml"
+
+usage() {
+  cat <<'EOF'
+Usage:
+  ./lab list
+  ./lab find <text>
+  ./lab path <lab-id>
+  ./lab run <lab-id>
+  ./lab validate <lab-id>
+  ./lab open <lab-id>
+EOF
+}
+
+lab_path() {
+  local id="$1"
+  local path
+  path="$(awk -v wanted="$id" '
+    $1 == "-" && $2 == "id:" { current = $3 }
+    current == wanted && $1 == "path:" { print $2; exit }
+  ' "$CATALOG")"
+
+  if [[ -z "$path" ]]; then
+    echo "Unknown laboratory: $id" >&2
+    exit 1
+  fi
+
+  printf '%s\n' "$path"
+}
+
+command="${1:-}"
+
+case "$command" in
+  list)
+    awk '
+      $1 == "-" && $2 == "id:" { id = $3 }
+      $1 == "title:" { title = substr($0, index($0, $2)); printf "%-16s %s\n", id, title }
+    ' "$CATALOG"
+    ;;
+  find)
+    query="${2:-}"
+    [[ -n "$query" ]] || { usage; exit 1; }
+    awk -v query="$query" 'BEGIN { IGNORECASE = 1 }
+      $1 == "-" && $2 == "id:" { id = $3 }
+      $1 == "title:" { title = substr($0, index($0, $2)) }
+      $1 == "path:" {
+        path = $2
+        record = id " " title " " path
+        if (record ~ query) printf "%-16s %-30s %s\n", id, title, path
+      }
+    ' "$CATALOG"
+    ;;
+  path)
+    lab_path "${2:-}"
+    ;;
+  run)
+    path="$(lab_path "${2:-}")"
+    (cd "$ROOT/$path" && docker compose up --build --abort-on-container-exit --exit-code-from demo)
+    ;;
+  validate)
+    path="$(lab_path "${2:-}")"
+    "$ROOT/tools/validate-lab.sh" "$ROOT/$path"
+    ;;
+  open)
+    path="$(lab_path "${2:-}")"
+    if command -v idea >/dev/null 2>&1; then
+      idea "$ROOT/$path"
+    elif [[ "$(uname -s)" == "Darwin" ]]; then
+      open -a "IntelliJ IDEA" "$ROOT/$path"
+    else
+      echo "IntelliJ IDEA launcher was not found. Open this directory manually:" >&2
+      echo "$ROOT/$path" >&2
+      exit 1
+    fi
+    ;;
+  *)
+    usage
+    exit 1
+    ;;
+esac
+

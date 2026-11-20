@@ -1,0 +1,8 @@
+id: JV-CON-001
+slug: race-condition
+title: Race Condition
+java: 21
+status: runnable
+entrypoint: com.maximslepukhin.labs.concurrency.RaceConditionDemo
+primary_command: docker compose up --build --abort-on-container-exit --exit-code-from demo
+
